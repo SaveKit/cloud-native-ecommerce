@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Cloud-Native E-commerce PoC Backend API (EcomPoc)
+
+# Global settings สำหรับทุก Function ในไฟล์นี้
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.12 # <-- อัปเดตตาม Python 3.12.0 ของคุณ
+    MemorySize: 128
+    Architectures:
+      - x86_64 # หรือ arm64 ถ้าคุณใช้ Mac M1/M2/M3
+
+Resources:
+  # 1. API Gateway (แบบ HTTP API เพื่อ Free Tier)
+  EcommerceHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration: # อนุญาตให้ React App (localhost) เรียก API นี้ได้
+        AllowOrigins:
+          - "http://localhost:5173" # Port ของ Vite (React)
+          - "http://localhost:3000" # Port React ทั่วไป
+        AllowHeaders:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        MaxAge: "3600"
+
+  # 2. Lambda Function สำหรับ Product Service
+  ProductServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/product_service/ # บอก SAM ว่าโค้ดอยู่ที่ไหน
+      Handler: app.main.handler # ชี้ไปที่: (ไฟล์ app/main.py) . (ตัวแปร handler)
+      Events:
+        # เชื่อม Function นี้กับ API Gateway
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi # เชื่อมกับ API ที่เราสร้างด้านบน
+            Path: /products/{proxy+} # รับทุก Path ที่ขึ้นต้นด้วย /products/...
+            Method: ANY # รับทุก Method (GET, POST, PUT, etc.)
+
+Outputs:
+  # แสดง URL ของ API เมื่อ Deploy เสร็จ
+  ApiEndpoint:
+    Description: "API Gateway Endpoint URL"
+    Value: !Sub "https://${EcommerceHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
