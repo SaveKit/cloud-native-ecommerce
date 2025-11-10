@@ -1,0 +1,21 @@
+# AWS SAM
+.aws-sam/
+samconfig.toml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Node.js
+node_modules/
+dist/
+.env
+.env.*
+
+# OS
+.DS_Store
+
+INSTRUCTION.md
