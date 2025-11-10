@@ -31,6 +31,18 @@ Resources:
           - OPTIONS
         MaxAge: "3600"
 
+  # DynamoDB Table สำหรับสินค้า
+  ProductsTable:
+    Type: AWS::Serverless::SimpleTable # SAM จะสร้าง Table แบบง่ายๆ ให้
+    Properties:
+      TableName: EcomPoc-ProductsTable # ตั้งชื่อ Table
+      PrimaryKey:
+        Name: ProductID # บอกว่า PK คือฟิลด์ชื่อ ProductID
+        Type: String
+      ProvisionedThroughput: # ตั้งค่าความเร็ว (อยู่ใน Free Tier)
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
   # 2. Lambda Function สำหรับ Product Service
   ProductServiceFunction:
     Type: AWS::Serverless::Function
@@ -38,13 +50,32 @@ Resources:
       CodeUri: services/product_service/ # บอก SAM ว่าโค้ดอยู่ที่ไหน
       Handler: app.main.handler # ชี้ไปที่: (ไฟล์ app/main.py) . (ตัวแปร handler)
       Events:
-        # เชื่อม Function นี้กับ API Gateway
-        ApiEvent:
+        # Event นี้สำหรับจับ /products/{id}, /products/abc/xyz
+        ProxyPathEvent:
           Type: HttpApi
           Properties:
             ApiId: !Ref EcommerceHttpApi # เชื่อมกับ API ที่เราสร้างด้านบน
             Path: /products/{proxy+} # รับทุก Path ที่ขึ้นต้นด้วย /products/...
             Method: ANY # รับทุก Method (GET, POST, PUT, etc.)
+
+        # Event นี้สำหรับจับ /products (ที่ไม่มีอะไรต่อท้าย)
+        # เพื่อใช้สำหรับ List (GET) และ Create (POST)
+        RootPathEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /products # จับ path ราก
+            Method: ANY
+
+      # เพิ่ม Policy ให้ Lambda Function
+      Policies:
+        # ให้สิทธิ์ Lambda ในการ (Create, Read, Update, Delete) กับ Table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable # ระบุว่าให้สิทธิ์เฉพาะ Table นี้
+
+      Environment: # ส่งชื่อ Table เข้าไปในโค้ด Python
+        Variables:
+          DYNAMO_TABLE_NAME: !Ref ProductsTable
 
 Outputs:
   # แสดง URL ของ API เมื่อ Deploy เสร็จ
