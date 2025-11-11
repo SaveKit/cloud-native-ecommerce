@@ -1,0 +1,32 @@
+name: Backend CI (Test Product Service)
+
+# สั่งให้ทำงานเมื่อมี Pull Request มาที่ branch 'main'
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest # ใช้เครื่อง Linux ของ GitHub
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10" # ใช้เวอร์ชันเดียวกับ venv ของคุณ
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # ติดตั้ง Library หลัก
+          pip install -r services/product_service/requirements.txt
+          # ติดตั้ง Library เทส (ต้องมี >=4.0.0 ที่เราแก้ไป)
+          pip install -r services/product_service/requirements-dev.txt
+
+      - name: Run Unit Tests
+        run: |
+          pytest
