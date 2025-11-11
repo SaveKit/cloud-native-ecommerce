@@ -1,27 +1,84 @@
+import { useState } from 'react';
 import { Amplify } from 'aws-amplify';
 import { withAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
-
-// (เรา Import Config อีกครั้งที่นี่ เพื่อความแน่ใจ)
-// (ไฟล์นี้จะถูก .gitignore)
 import './amplifyConfig.js'; 
 
+// --- วาง API Endpoint ---
+const API_ENDPOINT = "https://w63a7qryt0.execute-api.ap-southeast-1.amazonaws.com";
+
+// --- Import "fetchAuthSession" ---
+import { fetchAuthSession } from 'aws-amplify/auth'; 
+
 function App({ signOut, user }) {
-  // "signOut" และ "user" ถูกส่งมาจาก withAuthenticator
+  // --- State (สถานะ) ---
+  const [products, setProducts] = useState([]); // State สำหรับเก็บสินค้า
+  const [error, setError] = useState(null);     // State สำหรับเก็บ Error
+
+  const fetchProducts = async () => {
+    setError(null); // ล้าง Error เก่า
+    setProducts([]); // ล้างรายการสินค้าเก่า
+
+    try {
+      // ดึง "กุญแจ" (Session/Token) จาก Amplify
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString(); // ดึง IdToken ออกมา
+
+      if (!idToken) {
+        throw new Error("No IdToken found. Please sign in again.");
+      }
+
+      // 'fetch' ไปที่ API ของเรา (ที่ล็อคไว้)
+      const response = await fetch(`${API_ENDPOINT}/products`, {
+        method: 'GET',
+        headers: {
+          // "แนบกุญแจ" (Token) ไปใน Header!
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+
+      if (!response.ok) {
+        // ถ้า API Gateway ตอบกลับมาว่าไม่ OK (เช่น 500, 404)
+        throw new Error(`API call failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      setProducts(data); // บันทึกสินค้าลง State
+
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
-      {/* ใช้ Tailwind CSS */}
       <h1 className="text-3xl font-bold text-blue-600 mb-4">
         Hello, {user.username}!
       </h1>
-      <p className="text-gray-700 mb-6">
-        คุณได้ล็อกอินเข้าสู่ E-commerce PoC ของเราแล้ว
-      </p>
+
+      {/* --- เพิ่มปุ่ม และส่วนแสดงผล --- */}
+      <button 
+        onClick={fetchProducts} // เรียกฟังก์ชัน
+        className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+      >
+        Fetch Products
+      </button>
+
+      {/* แสดงผลลัพธ์ */}
+      <div className="mt-4 p-4 bg-gray-50 rounded">
+        <h2 className="text-xl font-semibold mb-2">API Response:</h2>
+        {error && <pre className="text-red-500">{JSON.stringify(error, null, 2)}</pre>}
+        {products.length > 0 ? (
+          <pre>{JSON.stringify(products, null, 2)}</pre>
+        ) : (
+          <p className="text-gray-500">Click button to fetch data...</p>
+        )}
+      </div>
 
       <button 
         onClick={signOut}
-        className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-6"
       >
         Sign Out
       </button>
@@ -29,8 +86,4 @@ function App({ signOut, user }) {
   );
 }
 
-// นี่คือ "เวทมนตร์" ครับ
-// "withAuthenticator" จะ "ห่อ" App ของเรา
-// ถ้า User ยังไม่ล็อกอิน, มันจะแสดงฟอร์ม Login/Sign Up ให้เอง
-// ถ้าล็อกอินแล้ว, มันถึงจะแสดง <App /> ของเรา
 export default withAuthenticator(App);

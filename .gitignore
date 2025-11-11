@@ -22,3 +22,6 @@ INSTRUCTION.md
 
 # Frontend Config
 frontend/src/amplifyConfig.js
+
+# Vite cache
+frontend/.vite
