@@ -3,6 +3,15 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   Cloud-Native E-commerce PoC Backend API (EcomPoc)
 
+# เราจะใช้ Parameter นี้เพื่อ "ส่ง" User Pool ID ที่เราคัดลอกมา
+Parameters:
+  CognitoUserPoolId:
+    Type: String
+    Description: "The ID of the Cognito User Pool (e.g., ap-southeast-1_xxxxx)"
+  CognitoAppClientId:
+    Type: String
+    Description: "The App Client ID of the Cognito User Pool (e.g., xxxxxxxxxxxxxxx)"
+
 # Global settings สำหรับทุก Function ในไฟล์นี้
 Globals:
   Function:
@@ -30,6 +39,16 @@ Resources:
           - DELETE
           - OPTIONS
         MaxAge: "3600"
+      # นี่คือการสร้าง "ยาม" (Authorizer)
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPoolId}"
+              audience:
+                - !Ref CognitoAppClientId
+                # (ในอนาคตเราจะเพิ่ม 'audience' ที่นี่ แต่ตอนนี้เอาแค่นี้ก่อน)
 
   # DynamoDB Table สำหรับสินค้า
   ProductsTable:
@@ -57,6 +76,8 @@ Resources:
             ApiId: !Ref EcommerceHttpApi # เชื่อมกับ API ที่เราสร้างด้านบน
             Path: /products/{proxy+} # รับทุก Path ที่ขึ้นต้นด้วย /products/...
             Method: ANY # รับทุก Method (GET, POST, PUT, etc.)
+            Auth:
+              Authorizer: CognitoAuthorizer # ใช้ยามที่เราสร้างไว้ข้างบน
 
         # Event นี้สำหรับจับ /products (ที่ไม่มีอะไรต่อท้าย)
         # เพื่อใช้สำหรับ List (GET) และ Create (POST)
@@ -66,6 +87,8 @@ Resources:
             ApiId: !Ref EcommerceHttpApi
             Path: /products # จับ path ราก
             Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
 
       # เพิ่ม Policy ให้ Lambda Function
       Policies:
