@@ -30,6 +30,7 @@ Resources:
         AllowOrigins:
           - "http://localhost:5173" # Port ของ Vite (React)
           - "http://localhost:3000" # Port React ทั่วไป
+          - "https://d1he8x2szbiv6n.cloudfront.net" # CloudFront URL
         AllowHeaders:
           - "*"
         AllowMethods:

@@ -5,7 +5,7 @@ import '@aws-amplify/ui-react/styles.css';
 import './amplifyConfig.js'; 
 
 // --- วาง API Endpoint ---
-const API_ENDPOINT = "https://w63a7qryt0.execute-api.ap-southeast-1.amazonaws.com";
+const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 
 // --- Import "fetchAuthSession" ---
 import { fetchAuthSession } from 'aws-amplify/auth'; 
