@@ -23,9 +23,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # ติดตั้ง Library หลัก
+          # Product Service
           pip install -r services/product_service/requirements.txt
-          # ติดตั้ง Library เทส (ต้องมี >=4.0.0 ที่เราแก้ไป)
           pip install -r services/product_service/requirements-dev.txt
+          # Order Service
+          pip install -r services/order_service/requirements.txt
+          pip install -r services/order_service/requirements-dev.txt
 
       - name: Run Unit Tests
         run: |

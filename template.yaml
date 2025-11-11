@@ -63,6 +63,27 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
+  # DynamoDB Table สำหรับคำสั่งซื้อ
+  OrdersTable:
+    Type: AWS::DynamoDB::Table # Type "เต็ม"
+    Properties:
+      TableName: EcomPoc-OrdersTable
+      # --- นิยาม PK + SK แบบเต็ม ---
+      AttributeDefinitions: # (นิยาม "ฟิลด์" ทั้งหมดที่เป็น Key)
+        - AttributeName: "UserID"
+          AttributeType: "S" # (S = String)
+        - AttributeName: "OrderID"
+          AttributeType: "S"
+      KeySchema: # (นิยาม "บทบาท" ของ Key)
+        - AttributeName: "UserID"
+          KeyType: "HASH" # (HASH = Partition Key / PK)
+        - AttributeName: "OrderID"
+          KeyType: "RANGE" # (RANGE = SortKey / SK)
+      # ---
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
   # 2. Lambda Function สำหรับ Product Service
   ProductServiceFunction:
     Type: AWS::Serverless::Function
@@ -121,6 +142,36 @@ Resources:
       Environment: # ส่งชื่อ Table เข้าไปในโค้ด Python
         Variables:
           DYNAMO_TABLE_NAME: !Ref ProductsTable
+
+  # 3. Lambda Function สำหรับ Order Service
+  OrderServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/order_service/
+      Handler: app.main.handler
+      Events:
+        ListOrdersEvent: # (GET /orders)
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /orders
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        CreateOrderEvent: # (POST /orders)
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /orders
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrdersTable
+      Environment:
+        Variables:
+          DYNAMO_TABLE_NAME: !Ref OrdersTable
 
 Outputs:
   # แสดง URL ของ API เมื่อ Deploy เสร็จ
