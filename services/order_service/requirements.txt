@@ -1,0 +1,3 @@
+fastapi
+mangum  # ตัวแปลง FastAPI ให้รันบน Lambda ได้
+boto3   # Library สำหรับคุยกับ AWS (เช่น DynamoDB)
