@@ -8,24 +8,30 @@ import './App.css'
 // Config Amplify
 import '../src/contexts/amplifyConfig';
 
+import { CartProvider } from './contexts/CartContext'
+
 // Layout และ Pages
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import CartPage from './pages/CartPage';
+import OrderHistoryPage from './pages/OrderHistoryPage';
 import ProfilePage from './pages/ProfilePage';
 
 function App({ signOut, user }) { // รับ signOut และ user จาก withAuthenticator
     return (
+      <CartProvider>
         <Router>
             <Layout> {/* ห่อหุ้มทุกหน้าด้วย Layout (Navbar + Content) */}
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/history" element={<OrderHistoryPage />} />
                     {/* คุณสามารถเพิ่มหน้าอื่นๆ ได้ที่นี่ */}
                 </Routes>
             </Layout>
         </Router>
+      </CartProvider>
     );
 }
 
