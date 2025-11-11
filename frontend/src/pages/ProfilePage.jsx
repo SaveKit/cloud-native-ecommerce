@@ -65,8 +65,8 @@ function ProfilePage() {
         setError(null);
 
         try {
-            const session = await Auth.currentSession();
-            const jwtToken = session.getIdToken().getJwtToken();
+            const session = await fetchAuthSession();
+            const jwtToken = session.tokens?.idToken?.toString();
 
             if (!jwtToken) {
                 throw new Error("No IdToken found.");

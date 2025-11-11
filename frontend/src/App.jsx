@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Amplify } from 'aws-amplify';
 import { withAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css'; // นำเข้าสไตล์ของ Amplify UI
+import './App.css'
 
 // Config Amplify
 import '../src/contexts/amplifyConfig';
