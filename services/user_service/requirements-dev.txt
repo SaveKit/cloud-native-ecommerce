@@ -1,0 +1,4 @@
+pytest
+moto[dynamodb] # เราต้องการ moto ที่จำลอง dynamodb ได้
+requests # (FastAPI TestClient ใช้ตัวนี้)
+httpx

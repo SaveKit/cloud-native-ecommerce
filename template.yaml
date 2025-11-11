@@ -84,6 +84,18 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
+  # DynamoDB Table สำหรับผู้ใช้
+  UsersTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: EcomPoc-UsersTable
+      PrimaryKey:
+        Name: UserID # Partition Key (PK) คือ UserID จาก Cognito
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
   # 2. Lambda Function สำหรับ Product Service
   ProductServiceFunction:
     Type: AWS::Serverless::Function
@@ -172,6 +184,36 @@ Resources:
       Environment:
         Variables:
           DYNAMO_TABLE_NAME: !Ref OrdersTable
+
+  # 4. Lambda Function สำหรับ User Service
+  UserServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: services/user_service/
+      Handler: app.main.handler
+      Events:
+        GetProfileEvent: # (GET /profile)
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /profile
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        UpdateProfileEvent: # (PUT /profile)
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /profile
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Environment:
+        Variables:
+          DYNAMO_TABLE_NAME: !Ref UsersTable
 
 Outputs:
   # แสดง URL ของ API เมื่อ Deploy เสร็จ
