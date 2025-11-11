@@ -25,3 +25,6 @@ frontend/src/amplifyConfig.js
 
 # Vite cache
 frontend/.vite
+
+# Frontend Environment Config
+frontend/.env
