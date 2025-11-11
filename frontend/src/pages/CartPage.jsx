@@ -1,62 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { useCart } from '../contexts/CartContext';
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 
 function CartPage() {
-    const [cartItems, setCartItems] = useState([]); // { product, quantity }
+    const { cartItems, updateQuantity, removeItem, clearCart } = useCart();
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [orderSuccess, setOrderSuccess] = useState(false);
-
-    // ดึงข้อมูลสินค้าในตะกร้าจาก Local Storage (หรือ Context)
-    useEffect(() => {
-        const storedCart = JSON.parse(localStorage.getItem('cart')) || {};
-        // ตรงนี้คุณต้อง fetch Product details อีกครั้งจาก API เพื่อเอา Price ล่าสุด
-        // สำหรับ PoC เราจะ mock ข้อมูลสินค้าสมมติขึ้นมา
-        const mockProducts = [
-            { ProductID: "PROD-1", Name: "Fancy Widget", Price: 10.50, ImageURL: "https://via.placeholder.com/100x70?text=Widget1" },
-            { ProductID: "PROD-2", Name: "Super Gadget", Price: 25.00, ImageURL: "https://via.placeholder.com/100x70?text=Gadget1" },
-            // ... เพิ่มสินค้า mock อื่นๆ ที่มีอยู่ใน DB
-        ];
-
-        const items = Object.keys(storedCart).map(productID => {
-            const product = mockProducts.find(p => p.ProductID === productID);
-            return product ? { product, quantity: storedCart[productID] } : null;
-        }).filter(Boolean); // กรอง null ออก
-
-        setCartItems(items);
-    }, []);
-
-    const updateQuantity = (productID, delta) => {
-        setCartItems(prevItems => {
-            const newItems = prevItems.map(item => 
-                item.product.ProductID === productID 
-                    ? { ...item, quantity: Math.max(0, item.quantity + delta) } 
-                    : item
-            ).filter(item => item.quantity > 0);
-
-            // อัปเดต Local Storage
-            const newStoredCart = newItems.reduce((acc, item) => {
-                acc[item.product.ProductID] = item.quantity;
-                return acc;
-            }, {});
-            localStorage.setItem('cart', JSON.stringify(newStoredCart));
-            return newItems;
-        });
-    };
-
-    const removeItem = (productID) => {
-        setCartItems(prevItems => {
-            const newItems = prevItems.filter(item => item.product.ProductID !== productID);
-            const newStoredCart = newItems.reduce((acc, item) => {
-                acc[item.product.ProductID] = item.quantity;
-                return acc;
-            }, {});
-            localStorage.setItem('cart', JSON.stringify(newStoredCart));
-            return newItems;
-        });
-    };
 
     const calculateTotal = () => {
         return cartItems.reduce((total, item) => total + (item.product.Price * item.quantity), 0);
@@ -75,7 +28,7 @@ function CartPage() {
         try {
             const session = await fetchAuthSession();
             const jwtToken = session.tokens?.idToken?.toString();
-            
+
             if (!jwtToken) {
                 throw new Error("No IdToken found.");
             }
@@ -106,7 +59,7 @@ function CartPage() {
             const orderResponse = await response.json();
             console.log("Order placed successfully:", orderResponse);
             setOrderSuccess(true);
-            setCartItems([]); // ล้างตะกร้า
+            clearCart();
             localStorage.removeItem('cart'); // ล้าง Local Storage
         } catch (err) {
             console.error("Failed to place order:", err);

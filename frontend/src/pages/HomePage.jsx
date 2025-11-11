@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { FaShoppingCart } from 'react-icons/fa'; // ไอคอนตะกร้า
+import { useCart } from '../contexts/CartContext';
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT; // ดึงจาก .env
 
@@ -8,7 +9,8 @@ function HomePage() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [cart, setCart] = useState({}); // { productID: quantity }
+
+    const { addToCart } = useCart();
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -45,14 +47,6 @@ function HomePage() {
 
         fetchProducts();
     }, []); // รันครั้งเดียวเมื่อ Component โหลด
-
-    const addToCart = (product) => {
-        setCart(prevCart => ({
-            ...prevCart,
-            [product.ProductID]: (prevCart[product.ProductID] || 0) + 1
-        }));
-        alert(`${product.Name} added to cart!`);
-    };
 
     if (loading) return <div className="text-center text-gray-700">Loading products...</div>;
     if (error) return <div className="text-center text-red-600">{error}</div>;
