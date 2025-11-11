@@ -29,6 +29,9 @@ jobs:
           # Order Service
           pip install -r services/order_service/requirements.txt
           pip install -r services/order_service/requirements-dev.txt
+          # User Service
+          pip install -r services/user_service/requirements.txt
+          pip install -r services/user_service/requirements-dev.txt
 
       - name: Run Unit Tests
         run: |
