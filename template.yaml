@@ -69,24 +69,45 @@ Resources:
       CodeUri: services/product_service/ # บอก SAM ว่าโค้ดอยู่ที่ไหน
       Handler: app.main.handler # ชี้ไปที่: (ไฟล์ app/main.py) . (ตัวแปร handler)
       Events:
-        # Event นี้สำหรับจับ /products/{id}, /products/abc/xyz
-        ProxyPathEvent:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref EcommerceHttpApi # เชื่อมกับ API ที่เราสร้างด้านบน
-            Path: /products/{proxy+} # รับทุก Path ที่ขึ้นต้นด้วย /products/...
-            Method: ANY # รับทุก Method (GET, POST, PUT, etc.)
-            Auth:
-              Authorizer: CognitoAuthorizer # ใช้ยามที่เราสร้างไว้ข้างบน
-
-        # Event นี้สำหรับจับ /products (ที่ไม่มีอะไรต่อท้าย)
-        # เพื่อใช้สำหรับ List (GET) และ Create (POST)
-        RootPathEvent:
+        GetProductEvent: # 1. GET (Read)
           Type: HttpApi
           Properties:
             ApiId: !Ref EcommerceHttpApi
-            Path: /products # จับ path ราก
-            Method: ANY
+            Path: /products/{product_id}
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        UpdateProductEvent: # 2. PUT (Update)
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /products/{product_id}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAuthorizer
+        DeleteProductEvent: # 3. DELETE
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /products/{product_id}
+            Method: DELETE
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+        ListProductsEvent: # 4. GET (List)
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /products
+            Method: GET
+            Auth:
+              Authorizer: CognitoAuthorizer
+        CreateProductEvent: # 5. POST (Create)
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref EcommerceHttpApi
+            Path: /products
+            Method: POST
             Auth:
               Authorizer: CognitoAuthorizer
 
