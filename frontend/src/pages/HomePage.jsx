@@ -59,7 +59,7 @@ function HomePage() {
                     <div key={product.ProductID} className="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
                         {/* รูปภาพสินค้า (ใช้ URL จาก DB เหมือนเดิม) */}
                         <img 
-                            src={product.ImageURL || 'https://via.placeholder.com/300x200?text=No+Image'} 
+                            src={product.ImageUrl || 'https://via.placeholder.com/300x200?text=No+Image'} 
                             alt={product.Name} 
                             className="w-full h-48 object-cover" 
                         />
