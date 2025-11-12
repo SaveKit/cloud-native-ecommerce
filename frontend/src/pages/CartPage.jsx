@@ -97,7 +97,7 @@ function CartPage() {
                 {cartItems.map(item => (
                     <div key={item.product.ProductID} className="flex items-center justify-between border-b py-4 last:border-b-0">
                         <div className="flex items-center space-x-4">
-                            <img src={item.product.ImageURL} alt={item.product.Name} className="w-16 h-16 object-cover rounded" />
+                            <img src={item.product.ImageUrl} alt={item.product.Name} className="w-16 h-16 object-cover rounded" />
                             <div>
                                 <h3 className="font-semibold text-gray-900">{item.product.Name}</h3>
                                 <p className="text-gray-600">${item.product.Price.toFixed(2)} each</p>
